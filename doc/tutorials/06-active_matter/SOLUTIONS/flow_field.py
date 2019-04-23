@@ -83,7 +83,7 @@ force = 0.1
 
 system.part.add(
     pos=[x0, y0, z0], type=0, mass=sph_mass, rinertia=[Ixyz, Ixyz, Ixyz],
-                swimming={'f_swim': force, 'mode': mode, 'dipole_length': sph_size + 0.5})
+    swimming={'f_swim': force, 'mode': mode, 'dipole_length': sph_size + 0.5})
 
 ##########################################################################
 
@@ -94,12 +94,11 @@ vskin = 0.1
 frict = 20.0
 visco = 1.0
 densi = 1.0
-temp = 0.0
 
 lbf = lb.LBFluidGPU(agrid=agrid, dens=densi,
-                    visc=visco, tau=dt, fric=frict, couple='3pt')
+                    visc=visco, tau=dt)
 system.actors.add(lbf)
-system.thermostat.set_lb(kT=temp)
+system.thermostat.set_lb(LB_fluid=lbf, gamma=frict, seed=42)
 
 ##########################################################################
 
@@ -120,7 +119,7 @@ with open("{}/trajectory.dat".format(outdir), 'w') as outfile:
 
         # Output 50 simulations
         if k % (prod_steps / 50) == 0:
-            num = k / (prod_steps / 50)
+            num = k // (prod_steps // 50)
             lbf.print_vtk_velocity("{}/lb_velocity_{}.vtk".format(outdir, num))
             system.part.writevtk(
                 "{}/position_{}.vtk".format(outdir, num), types=[0])

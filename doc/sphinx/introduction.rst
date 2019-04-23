@@ -64,7 +64,7 @@ avoided, providing the user with the possibility of choice. |es| cannot be
 aware whether your particles are representing atoms or billiard balls, so it
 cannot check if the chosen parameters make sense and it is the user's
 responsibility to make sure they do. In fact, |es| can be used to play billiard
-(see the sample script in :file:`samples/billard.py`)!
+(see the sample script in :file:`samples/billiard.py`)!
 
 On the other hand, flexibility of |es| stems from the employment of a scripting
 language at the steering level. Apart from the ability to modify the simulation
@@ -627,10 +627,6 @@ report so to the developers.
     | DPD Thermostat                 | None                   | Good             | Yes        |
     +--------------------------------+------------------------+------------------+------------+
     | Directional Lennard-Jones      | Single                 | Single           | No         |
-    +--------------------------------+------------------------+------------------+------------+
-    | MEMD                           | Single                 | Group            | Yes        |
-    +--------------------------------+------------------------+------------------+------------+
-    | Shan-Chen Multicomponent Fluid | Group                  | Group            | No         |
     +--------------------------------+------------------------+------------------+------------+
     | Tunable Slip Boundary          | Single                 | Single           | Yes        |
     +--------------------------------+------------------------+------------------+------------+

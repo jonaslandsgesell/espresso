@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "cells.hpp"
 #include "communication.hpp"
 #include "debug.hpp"
-#include "initialize.hpp"
+#include "event.hpp"
 #include "particle_data.hpp"
 #include "rotation.hpp"
 #include "utils.hpp"
@@ -32,7 +32,7 @@ namespace mpi = boost::mpi;
 
 void local_rotate_system(double phi, double theta, double alpha) {
   // Calculate center of mass
-  Vector3d local_com{};
+  Utils::Vector3d local_com{};
   double local_mass = 0.0;
 
   for (auto const &p : local_cells.particles()) {
@@ -42,13 +42,12 @@ void local_rotate_system(double phi, double theta, double alpha) {
     local_mass += p.p.mass;
   }
 
-  auto const total_mass =
-      mpi::all_reduce(comm_cart, local_mass, std::plus<double>());
+  auto const total_mass = mpi::all_reduce(comm_cart, local_mass, std::plus<>());
   auto const com =
-      mpi::all_reduce(comm_cart, local_com, std::plus<Vector3d>()) / total_mass;
+      mpi::all_reduce(comm_cart, local_com, std::plus<>()) / total_mass;
 
   // Rotation axis in Cartesian coordinates
-  Vector3d axis;
+  Utils::Vector3d axis;
   axis[0] = sin(theta) * cos(phi);
   axis[1] = sin(theta) * sin(phi);
   axis[2] = cos(theta);

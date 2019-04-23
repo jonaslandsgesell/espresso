@@ -53,7 +53,7 @@
 #include "bonded_interactions/bonded_interaction_data.hpp"
 #include "cells.hpp"
 #include "errorhandling.hpp"
-#include "initialize.hpp"
+#include "event.hpp"
 #include "integrate.hpp"
 #include "mpiio.hpp"
 #include "particle_data.hpp"
@@ -61,8 +61,8 @@
 
 #include <mpi.h>
 
+#include <cerrno>
 #include <cstring>
-#include <errno.h>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -312,10 +312,10 @@ static void read_head(const std::string &fn, int rank, unsigned *fields) {
       errexit();
     }
     MPI_Bcast(fields, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    fclose(f);
   } else {
     MPI_Bcast(fields, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
   }
-  free(f);
 }
 
 /** Reads the pref file and fills pref and nlocalpart with their

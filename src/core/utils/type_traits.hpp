@@ -38,17 +38,11 @@ struct function_remove_const<R(Args...) const> {
   using type = R(Args...);
 };
 
-/**
- * @brief True iff T is an instantiation of Template.
- */
-template <typename T, template <typename...> class Template>
-struct is_instance_of : public std::false_type {};
-
-template <typename... T, template <typename...> class Template>
-struct is_instance_of<Template<T...>, Template> : public std::true_type {};
-
-template <bool P, typename T = void>
-using enable_if_t = typename std::enable_if<P, T>::type;
+template <class...> struct conjunction : std::true_type {};
+template <class B1> struct conjunction<B1> : B1 {};
+template <class B1, class... Bn>
+struct conjunction<B1, Bn...>
+    : std::conditional<bool(B1::value), conjunction<Bn...>, B1>::type {};
 
 } // namespace Utils
 

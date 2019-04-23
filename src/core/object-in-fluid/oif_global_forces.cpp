@@ -29,7 +29,7 @@
 #include "communication.hpp"
 #include "errorhandling.hpp"
 #include "grid.hpp"
-#include "grid_based_algorithms/lb.hpp"
+#include "grid_based_algorithms/lb_interface.hpp"
 #include "particle_data.hpp"
 
 #include "utils/math/triangle_functions.hpp"
@@ -79,7 +79,7 @@ void calc_oif_global(double *area_volume,
 
   /* loop over particles */
   Particle *p1, *p2, *p3;
-  Vector3d p11, p22, p33;
+  Utils::Vector3d p11, p22, p33;
   int img[3];
   double AA[3], BB[3];
   Bonded_ia_parameters *iaparams;
@@ -191,7 +191,7 @@ void calc_oif_global(double *area_volume,
                 MPI_COMM_WORLD);
 }
 
-void add_oif_global_forces(double *area_volume,
+void add_oif_global_forces(double const *area_volume,
                            int molType) { // first-fold-then-the-same approach
   double area = area_volume[0];
   double VOL_volume = area_volume[1];

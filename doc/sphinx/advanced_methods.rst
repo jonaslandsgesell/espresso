@@ -298,7 +298,7 @@ The comma is needed to force Python to create a tuple containing a single item.
 
 
 For a more detailed description, see e.g. Guckenberger and Gekle, J. Phys. Cond. Mat. (2017) or contact us.
-This feature probably does not work with advanced LB features such electro kinetics or Shan-Chen.
+This feature probably does not work with advanced LB features such electro kinetics.
 
 A sample script is provided in the :file:`samples/immersed_boundary` directory of the source distribution.
 
@@ -1325,7 +1325,7 @@ continuity, diffusion-advection, Poisson, and Navier-Stokes equations:
 
    \begin{aligned}
    \label{eq:ek-model-continuity} \frac{\partial n_k}{\partial t} & = & -\, \nabla \cdot \vec{j}_k \vphantom{\left(\frac{\partial}{\partial}\right)} ; \\
-   \label{eq:ek-model-fluxes} \vec{j}_{k} & = & -D_k \nabla n_k - \nu_k \, q_k n_k\, \nabla \Phi + n_k \vec{v}_{\mathrm{fl}} \vphantom{\left(\frac{\partial}{\partial}\right)} ; \\
+   \label{eq:ek-model-fluxes} \vec{j}_{k} & = & -D_k \nabla n_k - \nu_k \, q_k n_k\, \nabla \Phi + n_k \vec{v}_{\mathrm{fl}} \vphantom{\left(\frac{\partial}{\partial}\right)} + \sqrt{n_k}\vec{\mathcal{W}}_k; \\
    \label{eq:ek-model-poisson} \Delta \Phi & = & -4 \pi \, {l_\mathrm{B}}\, {k_\mathrm{B}T}\sum_k q_k n_k \vphantom{\left(\frac{\partial}{\partial}\right)}; \\
    \nonumber \left(\frac{\partial \vec{v}_{\mathrm{fl}}}{\partial t} + \vec{v}_{\mathrm{fl}} \cdot \vec{\nabla} \vec{v}_{\mathrm{fl}} \right) \rho_\mathrm{fl} & = & -{k_\mathrm{B}T}\, \nabla \rho_\mathrm{fl} - q_k n_k \nabla \Phi \\
    \label{eq:ek-model-velocity} & & +\, \eta \vec{\Delta} \vec{v}_{\mathrm{fl}} + (\eta / 3 + \eta_{\text{b}}) \nabla (\nabla \cdot \vec{v}_{\mathrm{fl}}) \vphantom{\left(\frac{\partial}{\partial}\right)} ; \\
@@ -1355,6 +1355,9 @@ and input parameters
 
 :math:`\nu_k`
     the mobility of species :math:`k`,
+
+:math:`\vec{\mathcal{W}}_k`
+    the white-noise term for the flucatuations of species :math:`k`,
 
 :math:`q_k`
     the charge of a single particle of species :math:`k`,
@@ -1492,7 +1495,7 @@ stencil. For all other stencils, this choice is hardcoded. The default
 is ``"friction"``.
 
 
-The feature ``EK_ELECTROSTATIC_COUPLING`` enables the action of the electrostatic potential due to the
+``es_coupling`` enables the action of the electrostatic potential due to the
 electrokinetics species and charged boundaries on the MD particles. The
 forces on the particles are calculated by interpolation from the
 electric field which is in turn calculated from the potential via finite
@@ -1500,6 +1503,13 @@ differences. This only includes interactions between the species and
 boundaries and MD particles, not between MD particles and MD particles.
 To get complete electrostatic interactions a particles Coulomb method
 like Ewald or P3M has to be activated too.
+
+The fluctuation of the EK species can be turned on by the flag ``fluctuations``.
+This adds a white-noise term to the fluxes. The amplitude of this noise term
+can be controlled by ``fluctuation_amplitude``. To circumvent that these fluctuations
+lead to negative densities, they are modified by a smoothed Heaviside function,
+which decreases the magnitude of the flactuation for densities close to 0.
+By default the fluctuations are turned off.
 
 .. _Diffusive Species:
 
@@ -1517,13 +1527,16 @@ valency of the particles of that species ``valency``, and an optional external
 before, the LB density is completely decoupled from the electrokinetic
 densities. This has the advantage that greater freedom can be achieved
 in matching the internal parameters to an experimental system. Moreover,
-it is possible to choose parameters for which the LB is more stable. The species has to be added to a LB fluid::
+it is possible to choose parameters for which the LB is more stable. The species can be added to a LB fluid::
 
     ek.add_species(species)
 
-The LB fluid must be set up before using
-:class:`espressomd.electrokinetics.Electrokinetics` as shown above, before a
-diffusive species can be added. The variables ``density``, ``D``, and
+One can also add the species during the initialization step of the 
+:class:`espressomd.electrokinetics.Electrokinetics` by defining the list variable ``species``::
+
+    ek = espressomd.electrokinetics.Electrokinetics(species=[species], ...)
+
+The variables ``density``, ``D``, and
 ``valency`` must be set to properly initialize the diffusive species; the
 ``ext_force_density`` is optional.
 
@@ -1551,6 +1564,22 @@ rhomboid and hollowcone. We refer to the documentation of the
 the options associated to these shapes. In order to properly set up the
 boundaries, the ``charge_density`` and ``shape``
 must be specified.
+
+.. _Checkpointing:
+
+Checkpointing
+^^^^^^^^^^^^^
+::
+
+    ek.save_checkpoint(path)
+
+Checkpointing in the EK works quite similar to checkpointing in the LB, because the density is not saved within the :class:`espressomd.checkpointing` object. However one should keep in mind, that the EK not only saves the density of the species but also saves the population of the LB fluid in a separate file. To load a checkpoint the :class:`espressomd.electrokinetics.Electrokinetics` should have the same name as in the script it was saved, but to use the species one need to extract them from the :class:`espressomd.electrokinetics.Electrokinetics` via ``species``.
+
+::
+
+    checkpoint.load(cpt_path)
+    species = ek.get_params()['species']
+    ek.load_checkpoint(path)
 
 .. _Output:
 
