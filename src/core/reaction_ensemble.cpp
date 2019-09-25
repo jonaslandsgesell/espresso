@@ -1730,7 +1730,13 @@ double ConstantpHEnsemble::calculate_acceptance_probability(
   pKa = -current_reaction.nu_bar * log10(current_reaction.gamma);
   ln_bf = (E_pot_new - E_pot_old) - current_reaction.nu_bar * 1.0 / beta *
                                         log(10) * (m_constant_pH - pKa);
-  double bf = exp(-beta * ln_bf);
+  double oleg_factor=0;
+  if(current_reaction.nu_bar>0){
+    oleg_factor=factorial_Ni0_divided_by_factorial_Ni0_plus_nu_i(dummy_old_particle_numbers[current_reaction.product_types[1]], current_reaction.nu_bar)*std::pow(volume, current_reaction.nu_bar);
+  }else{
+    oleg_factor=factorial_Ni0_divided_by_factorial_Ni0_plus_nu_i(dummy_old_particle_numbers[current_reaction.reactant_types[1]], current_reaction.nu_bar)*std::pow(volume, current_reaction.nu_bar);
+    }
+  double bf = exp(-beta * ln_bf)*oleg_factor;
   return bf;
 }
 

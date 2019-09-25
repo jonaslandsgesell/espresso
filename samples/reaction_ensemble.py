@@ -42,7 +42,7 @@ args = parser.parse_args()
 
 # System parameters
 #############################################################
-box_l = 35
+box_l = 50
 
 # Integration parameters
 #############################################################
@@ -62,7 +62,7 @@ system.cell_system.max_num_cells = 2744
 # type 2 = H+
 
 N0 = 50  # number of titratable units
-K_diss = 0.0088
+K_diss = 1e-7/37.1
 
 for i in range(N0):
     system.part.add(id=i, pos=np.random.random(3) * system.box_l, type=1)
@@ -78,7 +78,7 @@ if args.mode == "reaction_ensemble":
 elif args.mode == "constant_pH_ensemble":
     RE = reaction_ensemble.ConstantpHEnsemble(
         temperature=1, exclusion_radius=1, seed=77)
-    RE.constant_pH = 2
+    RE.constant_pH = 7
 else:
     raise RuntimeError(
         "Please provide either --reaction_ensemble or --constant_pH_ensemble as argument ")
@@ -88,11 +88,18 @@ RE.add_reaction(gamma=K_diss, reactant_types=[0], reactant_coefficients=[1],
 print(RE.get_status())
 system.setup_type_map([0, 1, 2])
 
-for i in range(10000):
-    RE.reaction()
+##warmup
+RE.reaction(10000)
+#warmup
+
+numAs=[]
+for i in range(4000):
+    RE.reaction(20)
+    numAs.append(system.number_of_particles(type=1))
     if i % 100 == 0:
         print("HA", system.number_of_particles(type=0), "A-",
               system.number_of_particles(type=1), "H+", system.number_of_particles(type=2))
 
 print("reaction 0 has acceptance rate: ", RE.get_acceptance_rate_reaction(0))
 print("reaction 1 has acceptance rate: ", RE.get_acceptance_rate_reaction(1))
+print("average alpha", np.mean(numAs)/N0, "+/-", np.std(numAs, ddof=1)/np.sqrt(len(numAs)))
